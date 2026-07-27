@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CookFi — Giveaway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0a;
+    --bg-soft:#141412;
+    --paper:#f4f1e8;
+    --paper-shadow:#d8d4c6;
+    --ink:#0f0e0c;
+    --ink-soft:#5a564c;
+    --line:#c9c4b4;
+    --line-strong:#0f0e0c;
+    --danger:#7a2e22;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-font-smoothing:antialiased;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1c1b18 0%, var(--bg) 60%);
+    color:var(--ink);
+    font-family:'Space Mono', monospace;
+    display:flex;
+    justify-content:center;
+    padding:56px 16px 96px;
+  }
+  /* faint grid texture on the canvas, like a steel prep table */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:28px 28px;
+    pointer-events:none;
+  }
+
+  .ticket-wrap{
+    position:relative;
+    width:100%;
+    max-width:460px;
+  }
+
+  .ticket{
+    position:relative;
+    background:var(--paper);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7), 0 2px 0 var(--paper-shadow);
+    padding:36px 30px 30px;
+    transform:rotate(-0.6deg);
+  }
+
+  /* perforation row between header and body */
+  .perf{
+    display:flex;
+    justify-content:space-between;
+    margin:22px -30px;
+    padding:0 14px;
+  }
+  .perf span{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--bg);
+    flex:0 0 auto;
+  }
+  .perf::before,.perf::after{content:"";flex:1;border-top:1px dashed var(--line);align-self:center;margin:0 6px;}
+
+  /* torn bottom edge */
+  .tear{
+    height:16px;
+    margin:0 -30px -1px;
+    background:
+      linear-gradient(135deg, var(--paper) 50%, transparent 50%) 0 0/14px 16px repeat-x,
+      linear-gradient(-135deg, var(--paper) 50%, transparent 50%) 0 0/14px 16px repeat-x;
+    background-color:transparent;
+  }
+
+  .eyebrow{
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--ink-soft);
+    display:flex; justify-content:space-between;
+  }
+
+  .wordmark{
+    font-family:'Fraunces', serif;
+    font-weight:700; font-style:italic;
+    font-size:52px;
+    line-height:1;
+    margin:10px 0 2px;
+    letter-spacing:-.01em;
+  }
+  .wordmark .dot{color:var(--danger);}
+
+  .subtitle{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:8px;
+    margin-top:10px;
+    display:flex; justify-content:space-between;
+  }
+
+  .blurb{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:16px;
+    line-height:1.5;
+    color:var(--ink);
+    margin:18px 0 0;
+  }
+
+  .field{
+    margin-top:18px;
+  }
+  .field label{
+    display:block;
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--ink);
+    font-family:'Space Mono', monospace;
+    font-size:14px;
+    padding:6px 2px;
+    color:var(--ink);
+    outline:none;
+  }
+  .field input::placeholder{color:#9c9887;}
+  .field input:focus{border-bottom:2px solid var(--ink);}
+  .field.invalid input{border-bottom-color:var(--danger);}
+  .field .err{
+    display:none;
+    font-size:11px; color:var(--danger); margin-top:4px;
+  }
+  .field.invalid .err{display:block;}
+
+  .steps{
+    list-style:none; margin:22px 0 0; padding:0;
+  }
+  .step{
+    display:grid;
+    grid-template-columns:auto 24px 1fr;
+    align-items:start;
+    gap:0 12px;
+    padding:12px 0;
+    border-top:1px dashed var(--line);
+  }
+  .step:last-child{padding-bottom:0;}
+  .step-num{
+    font-size:12px; color:var(--ink-soft); padding-top:3px;
+  }
+  .step-main{display:flex; flex-direction:column; gap:6px;}
+  .step-title{font-size:13.5px; letter-spacing:.02em;}
+  .step-title b{font-weight:700;}
+  .step-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .step-link{
+    font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink); text-decoration:none;
+    border-bottom:1px solid var(--ink);
+    padding-bottom:1px;
+  }
+  .step-link:hover{color:var(--danger); border-color:var(--danger);}
+  .step-hint{font-size:10.5px; color:var(--ink-soft); font-style:normal;}
+
+  .checkbox{
+    width:22px; height:22px;
+    border:1.5px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    background:transparent;
+    padding:0;
+    margin-top:2px;
+    flex:0 0 auto;
+  }
+  .checkbox:disabled{opacity:.35; cursor:not-allowed;}
+  .checkbox svg{width:14px;height:14px; opacity:0; transition:opacity .12s;}
+  .checkbox.checked svg{opacity:1;}
+  .checkbox.checked{background:var(--ink);}
+  .checkbox.checked svg{stroke:var(--paper);}
+
+  .step-wallet-input{margin-top:6px;}
+  .step-wallet-input input{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--ink);
+    font-family:'Space Mono', monospace;
+    font-size:12.5px;
+    padding:6px 2px;
+    color:var(--ink);
+    outline:none;
+  }
+
+  .totals{
+    margin-top:22px;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+    display:flex; justify-content:space-between;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .totals b{color:var(--ink);}
+
+  .submit-btn{
+    width:100%;
+    margin-top:16px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:15px 18px;
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .submit-btn:hover:not(:disabled){background:var(--danger);}
+  .submit-btn:active:not(:disabled){transform:scale(.99);}
+  .submit-btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  .fineprint{
+    margin-top:14px;
+    font-size:10px; line-height:1.6;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+
+  .honeypot{position:absolute; left:-9999px; opacity:0; height:0; width:0;}
+
+  /* stamp shown after successful submit */
+  .stamp{
+    position:absolute;
+    top:38%; left:50%;
+    transform:translate(-50%,-50%) rotate(-14deg);
+    border:3px solid var(--danger);
+    color:var(--danger);
+    padding:10px 18px;
+    font-size:20px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:700;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    background:rgba(244,241,232,0.85);
+  }
+  .stamp.show{
+    opacity:1;
+    transform:translate(-50%,-50%) rotate(-14deg) scale(1);
+  }
+
+  .status-line{
+    margin-top:10px;
+    font-size:11px;
+    text-align:center;
+    min-height:14px;
+    color:var(--ink-soft);
+  }
+  .status-line.error{color:var(--danger);}
+
+  @media (max-width:400px){
+    .wordmark{font-size:42px;}
+    .ticket{padding:28px 20px 24px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="ticket-wrap">
+  <div class="ticket" id="ticket">
+    <div class="eyebrow">
+      <span id="order-date">--</span>
+      <span id="order-no">ORDER No. ------</span>
+    </div>
+    <div class="wordmark">CookFi<span class="dot">.</span></div>
+    <div class="subtitle">
+      <span>Giveaway Order Ticket</span>
+      <span>Kitchen Open</span>
+    </div>
+
+    <p class="blurb">Complete every step below, drop your wallet, and place your order. One entry per chef.</p>
+
+    <div class="field" id="field-x">
+      <label for="x-handle">Your X (Twitter) Username</label>
+      <input type="text" id="x-handle" placeholder="@yourhandle" autocomplete="off">
+      <div class="err">Enter your X username.</div>
+    </div>
+
+    <div class="perf"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+    <ol class="steps">
+      <li class="step">
+        <span class="step-num">01</span>
+        <button type="button" class="checkbox" data-step="follow1" aria-label="Confirm followed profile 1">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
+        </button>
+        <div class="step-main">
+          <div class="step-title">Follow <b id="x-profile-1-label">@profile_one</b> on X</div>
+          <div class="step-actions">
+            <a href="#" target="_blank" rel="noopener" class="step-link" data-open="follow1" id="x-profile-1-link">Open Profile ↗</a>
+            <span class="step-hint">tap open, then check the box</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="step">
+        <span class="step-num">02</span>
+        <button type="button" class="checkbox" data-step="follow2" aria-label="Confirm followed profile 2">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
+        </button>
+        <div class="step-main">
+          <div class="step-title">Follow <b id="x-profile-2-label">@profile_two</b> on X</div>
+          <div class="step-actions">
+            <a href="#" target="_blank" rel="noopener" class="step-link" data-open="follow2" id="x-profile-2-link">Open Profile ↗</a>
+            <span class="step-hint">tap open, then check the box</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="step">
+        <span class="step-num">03</span>
+        <button type="button" class="checkbox" data-step="engage" aria-label="Confirm liked, retweeted and commented">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
+        </button>
+        <div class="step-main">
+          <div class="step-title">Like, Retweet &amp; Comment on the giveaway post</div>
+          <div class="step-actions">
+            <a href="#" target="_blank" rel="noopener" class="step-link" data-open="engage" id="tweet-link">Open Post ↗</a>
+            <span class="step-hint">all three actions required</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="step">
+        <span class="step-num">04</span>
+        <button type="button" class="checkbox" data-step="wallet" aria-label="Confirm wallet entered" disabled>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
+        </button>
+        <div class="step-main">
+          <div class="step-title">Drop your EVM wallet address</div>
+          <div class="step-wallet-input">
+            <input type="text" id="wallet" placeholder="0x..." autocomplete="off" spellcheck="false">
+          </div>
+          <div class="step-hint" id="wallet-hint">must be a valid 0x… EVM address</div>
+        </div>
+      </li>
+
+      <li class="step">
+        <span class="step-num">05</span>
+        <button type="button" class="checkbox" data-step="telegram" aria-label="Confirm joined telegram">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
+        </button>
+        <div class="step-main">
+          <div class="step-title">Join the CookFi Telegram</div>
+          <div class="step-actions">
+            <a href="#" target="_blank" rel="noopener" class="step-link" data-open="telegram" id="telegram-link">Open Group ↗</a>
+            <span class="step-hint">self-reported, spot checks may apply</span>
+          </div>
+        </div>
+      </li>
+    </ol>
+
+    <div class="totals">
+      <span>Steps Completed</span>
+      <span><b id="progress">0</b> / 5</span>
+    </div>
+
+    <input type="text" class="honeypot" id="hp-field" name="company" tabindex="-1" autocomplete="off">
+
+    <button class="submit-btn" id="submit-btn" disabled>Submit Entry</button>
+    <div class="status-line" id="status-line"></div>
+
+    <p class="fineprint">By submitting you agree your X username, wallet address and Telegram username may be reviewed to verify entry. No purchase necessary. CookFi is not affiliated with X Corp or Telegram.</p>
+
+    <div class="stamp" id="stamp">Entry Filed</div>
+  </div>
+  <div class="tear"></div>
+</div>
+
+<script>
+(function(){
+
+  /* ======================================================================
+     CONFIG — replace these placeholder values before launch.
+     - formEndpoint: URL of your Google Apps Script Web App (see the
+       included apps-script.gs + SETUP.md for how to get this).
+     - social links: paste your real X profile URLs, tweet URL and
+       Telegram invite link here.
+     ====================================================================== */
+  const CONFIG = {
+    formEndpoint: "https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec",
+    giveawayName: "CookFi Giveaway",
+    xProfile1: { handle: "@profile_one", url: "https://x.com/REPLACE_ME_1" },
+    xProfile2: { handle: "@profile_two", url: "https://x.com/REPLACE_ME_2" },
+    tweetUrl: "https://x.com/REPLACE_ME/status/REPLACE_ME",
+    telegramUrl: "https://t.me/REPLACE_ME"
+  };
+
+  // ---- Wire config into the DOM ----
+  document.getElementById('x-profile-1-label').textContent = CONFIG.xProfile1.handle;
+  document.getElementById('x-profile-1-link').href = CONFIG.xProfile1.url;
+  document.getElementById('x-profile-2-label').textContent = CONFIG.xProfile2.handle;
+  document.getElementById('x-profile-2-link').href = CONFIG.xProfile2.url;
+  document.getElementById('tweet-link').href = CONFIG.tweetUrl;
+  document.getElementById('telegram-link').href = CONFIG.telegramUrl;
+
+  // ---- Ticket header: date + pseudo-random order number ----
+  const now = new Date();
+  document.getElementById('order-date').textContent = now.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'});
+  document.getElementById('order-no').textContent = "ORDER No. " + Math.floor(100000 + Math.random()*900000);
+
+  // ---- State ----
+  const state = {
+    follow1:false, follow2:false, engage:false, wallet:false, telegram:false
+  };
+
+  const walletRegex = /^0x[a-fA-F0-9]{40}$/;
+
+  const checkboxes = Array.from(document.querySelectorAll('.checkbox'));
+  const walletInput = document.getElementById('wallet');
+  const walletCheckbox = document.querySelector('.checkbox[data-step="wallet"]');
+  const walletHint = document.getElementById('wallet-hint');
+  const xHandleField = document.getElementById('field-x');
+  const xHandleInput = document.getElementById('x-handle');
+  const submitBtn = document.getElementById('submit-btn');
+  const progressEl = document.getElementById('progress');
+  const statusLine = document.getElementById('status-line');
+  const stamp = document.getElementById('stamp');
+
+  // Track which "open" links have been clicked, to gate checkbox use
+  const opened = { follow1:false, follow2:false, engage:false, telegram:false };
+  document.querySelectorAll('[data-open]').forEach(a=>{
+    a.addEventListener('click', ()=>{ opened[a.dataset.open] = true; });
+  });
+
+  function updateProgress(){
+    const count = Object.values(state).filter(Boolean).length;
+    progressEl.textContent = count;
+    const allDone = count === 5 && walletRegex.test(walletInput.value.trim());
+    submitBtn.disabled = !allDone;
+  }
+
+  checkboxes.forEach(box=>{
+    box.addEventListener('click', ()=>{
+      const key = box.dataset.step;
+      if (key !== 'wallet' && !opened[key]){
+        statusLine.textContent = "Open the link first, then confirm.";
+        statusLine.classList.add('error');
+        setTimeout(()=>{ statusLine.textContent=''; statusLine.classList.remove('error'); }, 1800);
+        return;
+      }
+      state[key] = !state[key];
+      box.classList.toggle('checked', state[key]);
+      updateProgress();
+    });
+  });
+
+  walletInput.addEventListener('input', ()=>{
+    const valid = walletRegex.test(walletInput.value.trim());
+    walletCheckbox.disabled = !valid;
+    walletHint.textContent = valid ? "looks good ✓" : "must be a valid 0x… EVM address";
+    if (!valid){
+      state.wallet = false;
+      walletCheckbox.classList.remove('checked');
+    }
+    updateProgress();
+  });
+
+  walletCheckbox.addEventListener('click', ()=>{
+    if (walletCheckbox.disabled) return;
+  });
+
+  submitBtn.addEventListener('click', async ()=>{
+    // honeypot check
+    if (document.getElementById('hp-field').value){
+      return; // silently drop bots
+    }
+
+    const xHandle = xHandleInput.value.trim();
+    if (!xHandle){
+      xHandleField.classList.add('invalid');
+      xHandleInput.focus();
+      return;
+    }
+    xHandleField.classList.remove('invalid');
+
+    const payload = {
+      giveaway: CONFIG.giveawayName,
+      xHandle: xHandle,
+      wallet: walletInput.value.trim(),
+      telegramConfirmed: state.telegram,
+      followConfirmed1: state.follow1,
+      followConfirmed2: state.follow2,
+      engagementConfirmed: state.engage,
+      submittedAt: new Date().toISOString(),
+      userAgent: navigator.userAgent
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Cooking…";
+    statusLine.classList.remove('error');
+    statusLine.textContent = "Sending your order to the kitchen…";
+
+    try{
+      if (CONFIG.formEndpoint.includes("REPLACE_WITH_YOUR_DEPLOYMENT_ID")){
+        // No real endpoint configured yet — fall back to a local-only demo
+        // so the page is still testable before setup is finished.
+        await new Promise(r=>setTimeout(r, 700));
+        console.log("DEMO MODE — no formEndpoint configured. Payload:", payload);
+      } else {
+        await fetch(CONFIG.formEndpoint, {
+          method: "POST",
+          mode: "no-cors", // Apps Script web apps don't return CORS headers
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      statusLine.textContent = "Order received.";
+      submitBtn.textContent = "Submitted";
+      stamp.classList.add('show');
+    } catch(err){
+      console.error(err);
+      statusLine.textContent = "Something burned in the kitchen — please try again.";
+      statusLine.classList.add('error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Entry";
+    }
+  });
+
+  updateProgress();
+})();
+</script>
+
+</body>
+</html>
