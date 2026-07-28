@@ -409,6 +409,7 @@
     xProfile2: { handle: "@Goobze", url: "https://x.com/Goobze" },
     tweetUrl: "https://x.com/i/status/2080637270873489640",
     telegramUrl: "https://t.me/+atn2ffJExfoyODA1"
+    campaignEnded: true // 1. ADD THIS PROPERTY TO CONFIG
   };
 
   // ---- Wire config into the DOM ---z
@@ -445,6 +446,18 @@
   const progressEl = document.getElementById('progress');
   const statusLine = document.getElementById('status-line');
   const stamp = document.getElementById('stamp');
+
+  if (CONFIG.campaignEnded) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Campaign Ended";
+    statusLine.textContent = "This giveaway is now closed.";
+    
+    // Disable all inputs and checkboxes on the ticket
+    document.querySelectorAll('input, button.checkbox').forEach(el => el.disabled = true);
+    
+    // Stop executing the rest of the event listener setup
+    return;
+  }
 
   // Track which "open" links have been clicked, to gate checkbox use
   const opened = { follow1:false, follow2:false, engage:false, telegram:false };
