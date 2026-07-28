@@ -410,7 +410,6 @@
     xProfile2: { handle: "@Goobze", url: "https://x.com/Goobze" },
     tweetUrl: "https://x.com/i/status/2080637270873489640",
     telegramUrl: "https://t.me/+atn2ffJExfoyODA1"
-    campaignEnded: true 
   };
 
   // ---- Wire config into the DOM ---z
@@ -454,18 +453,6 @@
   document.querySelectorAll('[data-open]').forEach(a=>{
     a.addEventListener('click', ()=>{ opened[a.dataset.open] = true; });
   });
-
- if (CONFIG.campaignEnded) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Campaign Ended";
-    statusLine.textContent = "This giveaway is now closed.";
-    
-    // Disable all inputs and checkboxes on the ticket
-    document.querySelectorAll('input, button.checkbox').forEach(el => el.disabled = true);
-    
-    // Stop executing the rest of the event listener setup
-    return;
- }
 
   function updateProgress(){
     const count = Object.values(state).filter(Boolean).length;
