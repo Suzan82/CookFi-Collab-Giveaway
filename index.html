@@ -448,7 +448,14 @@
   const statusLine = document.getElementById('status-line');
   const stamp = document.getElementById('stamp');
 
-  if (CONFIG.campaignEnded) {
+
+  // Track which "open" links have been clicked, to gate checkbox use
+  const opened = { follow1:false, follow2:false, engage:false, telegram:false };
+  document.querySelectorAll('[data-open]').forEach(a=>{
+    a.addEventListener('click', ()=>{ opened[a.dataset.open] = true; });
+  });
+
+ if (CONFIG.campaignEnded) {
     submitBtn.disabled = true;
     submitBtn.textContent = "Campaign Ended";
     statusLine.textContent = "This giveaway is now closed.";
@@ -458,13 +465,7 @@
     
     // Stop executing the rest of the event listener setup
     return;
-  }
-
-  // Track which "open" links have been clicked, to gate checkbox use
-  const opened = { follow1:false, follow2:false, engage:false, telegram:false };
-  document.querySelectorAll('[data-open]').forEach(a=>{
-    a.addEventListener('click', ()=>{ opened[a.dataset.open] = true; });
-  });
+ }
 
   function updateProgress(){
     const count = Object.values(state).filter(Boolean).length;
